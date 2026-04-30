@@ -17,3 +17,33 @@ def login():
 def logout():
     session.pop("dashboard_logged_in", None)
     return redirect(url_for("dashboard.login"))
+
+
+@bp.route("/saki/")
+@login_required
+def index():
+    return render_template("dashboard/index.html", active="index")
+
+
+@bp.route("/saki/control")
+@login_required
+def control():
+    return render_template("dashboard/control.html", active="control")
+
+
+@bp.route("/saki/team")
+@login_required
+def team():
+    return render_template("dashboard/team.html", active="team")
+
+
+@bp.route("/saki/articles")
+@login_required
+def articles():
+    return render_template("dashboard/articles.html", active="articles")
+
+
+@bp.route("/saki/engagement")
+@login_required
+def engagement():
+    return render_template("dashboard/engagement.html", active="engagement")
