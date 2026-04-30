@@ -79,49 +79,49 @@ def sync_tasks_to_db(plan_id: str) -> None:
     from datetime import datetime
 
     tasks = get_tasks(plan_id)
-        for t in tasks:
-            existing = Task.query.filter_by(planner_id=t["id"]).first()
-            assigned_to_id = None
-            assignments = t.get("assignments", {})
-            if assignments:
-                first_user_id = next(iter(assignments))
-                member = TeamMember.query.filter_by(teams_user_id=first_user_id).first()
-                if member:
-                    assigned_to_id = member.id
+    for t in tasks:
+        existing = Task.query.filter_by(planner_id=t["id"]).first()
+        assigned_to_id = None
+        assignments = t.get("assignments", {})
+        if assignments:
+            first_user_id = next(iter(assignments))
+            member = TeamMember.query.filter_by(teams_user_id=first_user_id).first()
+            if member:
+                assigned_to_id = member.id
 
-            percent = t.get("percentComplete", 0)
-            if percent == 0:
-                status = "not_started"
-            elif percent == 100:
-                status = "done"
-            else:
-                status = "in_progress"
+        percent = t.get("percentComplete", 0)
+        if percent == 0:
+            status = "not_started"
+        elif percent == 100:
+            status = "done"
+        else:
+            status = "in_progress"
 
-            due_date = None
-            if t.get("dueDateTime"):
-                try:
-                    due_date = datetime.fromisoformat(t["dueDateTime"].replace("Z", "+00:00"))
-                except (ValueError, TypeError):
-                    due_date = None
+        due_date = None
+        if t.get("dueDateTime"):
+            try:
+                due_date = datetime.fromisoformat(t["dueDateTime"].replace("Z", "+00:00"))
+            except (ValueError, TypeError):
+                due_date = None
 
-            if existing:
-                existing.status = status
-                existing.assigned_to_id = assigned_to_id
-                existing.bucket = t.get("bucketId")
-                existing.due_date = due_date
-                existing.planner_updated_at = datetime.utcnow()
-                existing.last_synced_at = datetime.utcnow()
-            else:
-                task = Task(
-                    planner_id=t["id"],
-                    title=t.get("title", "Unavngivet opgave"),
-                    assigned_to_id=assigned_to_id,
-                    status=status,
-                    bucket=t.get("bucketId"),
-                    due_date=due_date,
-                    plan_id=plan_id,
-                    last_synced_at=datetime.utcnow(),
-                )
-                db.session.add(task)
+        if existing:
+            existing.status = status
+            existing.assigned_to_id = assigned_to_id
+            existing.bucket = t.get("bucketId")
+            existing.due_date = due_date
+            existing.planner_updated_at = datetime.utcnow()
+            existing.last_synced_at = datetime.utcnow()
+        else:
+            task = Task(
+                planner_id=t["id"],
+                title=t.get("title", "Unavngivet opgave"),
+                assigned_to_id=assigned_to_id,
+                status=status,
+                bucket=t.get("bucketId"),
+                due_date=due_date,
+                plan_id=plan_id,
+                last_synced_at=datetime.utcnow(),
+            )
+            db.session.add(task)
 
-        db.session.commit()
+    db.session.commit()
