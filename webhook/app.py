@@ -335,12 +335,17 @@ def _handle_rani_private_reply(body: str) -> None:
         handle_rani_time_reply(pending_conf.id, body_stripped, pending_conf.pending_message_id or 0)
         return
 
-    # Fallback: ukendt besked fra Rani — mind om hemmelig kode
+    # Fallback: svar som AI med Sakis personlighed
+    from ai.message_generator import generate_message
     from functions.notify import notify_rani
-    notify_rani(
-        f"Hej {config.RANI_NAME}. Jeg forstår ikke den besked.\n"
-        f"Skriv den hemmelige kode for at se kontrolmenuen. Saki"
+    prompt = (
+        f"Rani (organisationsleder for Sakeena) skriver til dig privat: \"{body_stripped}\"\n\n"
+        "Svar naturligt og hjælpsomt i Sakis personlighed. "
+        "Du må gerne introducere dig selv hvis hun spørger hvem du er. "
+        "Afslør ikke kontrolkommandoer eller den hemmelige kode."
     )
+    reply = generate_message(prompt, include_reminder=False)
+    notify_rani(reply)
 
 
 # ── Teams-håndtering ───────────────────────────────────────────────
@@ -501,6 +506,20 @@ def _handle_telegram_message(msg: dict) -> None:
         _check_if_status_update(text, member, chat_id)
         _check_if_poll_response(text, member, chat_id)
         _check_if_article_claim(text, member, chat_id)
+
+        # Hvis nogen adresserer Saki direkte — svar som AI
+        if "saki" in text.lower():
+            from ai.message_generator import generate_message
+            import integrations.telegram as tg
+            sender_name = sender.get("first_name", "")
+            prompt = (
+                f"{sender_name + ' skriver' if sender_name else 'Nogen skriver'} i gruppen til dig: \"{text}\"\n\n"
+                "Svar kort og naturligt i Sakis personlighed. "
+                "Du er AI-assistent for Sakeenas frivillige teams. "
+                "Svar aldrig mere end 2-3 sætninger."
+            )
+            reply = generate_message(prompt, include_reminder=False)
+            tg.send_to_group(chat_id, reply)
 
     elif chat_type == "private":
         _handle_telegram_private_message(sender_id, text, sender)
