@@ -490,6 +490,45 @@ def _handle_telegram_message(msg: dict) -> None:
         _check_if_poll_response(text, member, chat_id)
         _check_if_article_claim(text, member, chat_id)
 
+    elif chat_type == "private":
+        _handle_telegram_private_message(sender_id, text, sender)
+
+
+def _handle_telegram_private_message(sender_id: str, text: str, sender: dict) -> None:
+    """Handle a private DM to the bot from a non-Rani user on Telegram (Function 18)."""
+    from database.models import TeamMember, Task
+    from ai.message_generator import generate_message
+    from functions.direct_message import _is_admin_question, _needs_rani
+    import integrations.telegram as tg
+
+    member = TeamMember.query.filter_by(telegram_chat_id=sender_id).first()
+
+    context = ""
+    if member:
+        tasks = Task.query.filter_by(assigned_to_id=member.id, status="in_progress").limit(3).all()
+        context = f"\nMedlem: {member.name} ({member.team}-team)"
+        if tasks:
+            context += f"\nAktive opgaver: {', '.join(t.title for t in tasks)}"
+
+    _PRIVATE_RULES = (
+        "Dette er en privat besked fra et teammedlem. "
+        "Besvar kun faktuelle spørgsmål om deadlines, opgaver og workshop-tider. "
+        "Afslør ALDRIG admin-funktioner, kontrol-kommandoer eller indstillinger. "
+        "Træf ingen beslutninger."
+    )
+
+    if _is_admin_question(text):
+        reply = "Det er ikke noget jeg kan hjælpe med her. Saki"
+    elif _needs_rani(text):
+        sender_name = member.name if member else sender.get("first_name", sender_id)
+        tg.send_to_rani(f"{sender_name} skriver: \"{text[:200]}\". Saki")
+        reply = "Det skal Rani tage stilling til. Jeg giver besked videre. Saki"
+    else:
+        prompt = f"{_PRIVATE_RULES}\n\nMedlem skriver privat:{context}\n\nBesked: {text}"
+        reply = generate_message(prompt, include_reminder=False)
+
+    tg.send_message(sender_id, reply)
+
 
 # ── Signature verification ────────────────────────────────────────
 
