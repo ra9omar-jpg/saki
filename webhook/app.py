@@ -501,6 +501,8 @@ def _handle_telegram_private_message(sender_id: str, text: str, sender: dict) ->
     from functions.direct_message import _is_admin_question, _needs_rani
     import integrations.telegram as tg
 
+    logger.info("DM modtaget fra sender_id=%s first_name=%s tekst=%r", sender_id, sender.get("first_name"), text)
+
     member = TeamMember.query.filter_by(telegram_chat_id=sender_id).first()
 
     context = ""
