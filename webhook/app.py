@@ -333,6 +333,14 @@ def _handle_rani_private_reply(body: str) -> None:
     if pending_conf:
         from functions.pre_send_confirmation import handle_rani_time_reply
         handle_rani_time_reply(pending_conf.id, body_stripped, pending_conf.pending_message_id or 0)
+        return
+
+    # Fallback: ukendt besked fra Rani — mind om hemmelig kode
+    from functions.notify import notify_rani
+    notify_rani(
+        f"Hej {config.RANI_NAME}. Jeg forstår ikke den besked.\n"
+        f"Skriv den hemmelige kode for at se kontrolmenuen. Saki"
+    )
 
 
 # ── Teams-håndtering ───────────────────────────────────────────────
