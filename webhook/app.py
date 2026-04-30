@@ -439,7 +439,11 @@ def _detect_group(from_number: str, value: dict) -> str | None:
 def _process_telegram_webhook(body: dict) -> None:
     message = body.get("message")
     if not message:
+        logger.error("DEBUG Telegram: ingen message i body: %s", body)
         return
+    logger.error("DEBUG Telegram: besked modtaget fra chat_id=%s type=%s tekst=%r",
+                 message.get("chat", {}).get("id"), message.get("chat", {}).get("type"),
+                 message.get("text", "")[:50])
     _handle_telegram_message(message)
 
 

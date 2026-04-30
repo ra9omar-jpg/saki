@@ -209,7 +209,11 @@ class SakiState(db.Model):
 def get_saki_state() -> SakiState:
     state = db.session.get(SakiState, 1)
     if not state:
-        state = SakiState(id=1)
-        db.session.add(state)
-        db.session.commit()
+        try:
+            state = SakiState(id=1)
+            db.session.add(state)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            state = db.session.get(SakiState, 1)
     return state
