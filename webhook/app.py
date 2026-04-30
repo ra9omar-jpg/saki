@@ -159,6 +159,9 @@ def create_app() -> Flask:
         db.session.commit()
         return jsonify({"id": member.id, "name": member.name})
 
+    from dashboard import bp as dashboard_bp
+    app.register_blueprint(dashboard_bp)
+
     return app
 
 
