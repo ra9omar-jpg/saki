@@ -1,0 +1,89 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Oversigt — Sakeena AI Hub{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">Oversigt</h2>
+  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ mode_color }}">
+    {{ mode_label }}
+  </span>
+</div>
+
+<!-- Status banner -->
+<div class="bg-white rounded-xl border border-gray-200 p-5 mb-6 flex items-center gap-4 shadow-sm">
+  {% if state.is_shutdown %}
+    <span class="w-3 h-3 rounded-full bg-red-500 shrink-0"></span>
+    <div>
+      <p class="text-sm font-semibold text-gray-800">Saki er lukket ned</p>
+      <p class="text-xs text-gray-400 mt-0.5">Gå til Kontrol og tryk "Vågn op" for at genaktivere.</p>
+    </div>
+  {% elif state.is_paused %}
+    <span class="w-3 h-3 rounded-full bg-yellow-400 shrink-0"></span>
+    <div>
+      <p class="text-sm font-semibold text-gray-800">Saki er på pause</p>
+      <p class="text-xs text-gray-400 mt-0.5">
+        {% if state.paused_until %}Vågner automatisk kl. {{ state.paused_until.strftime('%H:%M') }}.{% endif %}
+      </p>
+    </div>
+  {% else %}
+    <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0 pulse-dot"></span>
+    <div>
+      <p class="text-sm font-semibold text-gray-800">Saki kører normalt</p>
+      <p class="text-xs text-gray-400 mt-0.5">Alle funktioner er aktive.</p>
+    </div>
+  {% endif %}
+
+  <a href="{{ url_for('dashboard.control') }}"
+     class="ml-auto text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors">
+    Gå til kontrol →
+  </a>
+</div>
+
+<!-- Stats grid -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <p class="text-3xl font-bold {% if unanswered > 0 %}text-yellow-600{% else %}text-gray-900{% endif %}">
+      {{ unanswered }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">Ubesvarede spørgsmål</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <p class="text-3xl font-bold {% if missing_status > 0 %}text-yellow-600{% else %}text-gray-900{% endif %}">
+      {{ missing_status }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">Mangler ugentlig status</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <p class="text-3xl font-bold {% if articles_waiting > 0 %}text-yellow-600{% else %}text-gray-900{% endif %}">
+      {{ articles_waiting }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">Artikler venter på reviewer</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <p class="text-3xl font-bold {% if articles_overdue > 0 %}text-red-600{% else %}text-gray-900{% endif %}">
+      {{ articles_overdue }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">Forsinkede reviews</p>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+  <h3 class="text-sm font-semibold text-gray-700 mb-3">Hurtige handlinger</h3>
+  <div class="flex gap-3 flex-wrap">
+    <a href="{{ url_for('dashboard.control') }}"
+       class="px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors"
+       style="background:#1C2333" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+      Gå til Kontrol
+    </a>
+    <a href="{{ url_for('dashboard.articles') }}"
+       class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+      Se artikel-kø
+    </a>
+    <a href="{{ url_for('dashboard.team') }}"
+       class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+      Se team
+    </a>
+  </div>
+</div>
+{% endblock %}
