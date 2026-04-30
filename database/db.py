@@ -8,4 +8,5 @@ def init_db(app):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
     with app.app_context():
+        import database.models  # ensure all models are registered before create_all
         db.create_all()
