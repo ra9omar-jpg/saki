@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import functools
 from flask import session, redirect, url_for
 from config import config
@@ -7,7 +8,7 @@ from config import config
 def check_password(password: str) -> bool:
     given = hashlib.sha256(password.encode()).hexdigest()
     expected = hashlib.sha256(config.DASHBOARD_PASSWORD.encode()).hexdigest()
-    return given == expected
+    return hmac.compare_digest(given, expected)
 
 
 def login_required(f):

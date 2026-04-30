@@ -19,6 +19,8 @@ VALID_ROLES = {"member", "lead", "admin"}
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = config.SECRET_KEY
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     init_db(app)
 
     # ── Health ──────────────────────────────────────────────────

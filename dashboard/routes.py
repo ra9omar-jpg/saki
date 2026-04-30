@@ -13,7 +13,7 @@ def login():
     return render_template("dashboard/login.html")
 
 
-@bp.route("/logout")
+@bp.route("/logout", methods=["POST"])
 def logout():
     session.pop("dashboard_logged_in", None)
     return redirect(url_for("dashboard.login"))

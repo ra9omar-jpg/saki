@@ -8,4 +8,3 @@ bp = Blueprint(
 )
 
 from dashboard import routes  # noqa: E402,F401
-from dashboard import auth    # noqa: E402,F401

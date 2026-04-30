@@ -103,7 +103,7 @@ class Config:
 
     # App
     SECRET_KEY = os.environ["SECRET_KEY"]
-    DASHBOARD_PASSWORD = os.environ.get("DASHBOARD_PASSWORD", "sakeena2026")
+    DASHBOARD_PASSWORD = os.environ.get("DASHBOARD_PASSWORD", "")
     DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///saki.db")
     PORT = int(os.environ.get("PORT", 5000))
     WEBHOOK_BASE_URL = os.environ.get("WEBHOOK_BASE_URL", "http://localhost:5000")
