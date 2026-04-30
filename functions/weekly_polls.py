@@ -39,6 +39,11 @@ def send_weekly_poll(platform: str = "whatsapp") -> Poll:
         poll.group_id = f"{config.WHATSAPP_GROUP_MARKETING}|{config.WHATSAPP_GROUP_RD}"
         wa.send_to_marketing_group(text)
         wa.send_to_rd_group(text)
+    elif platform == "telegram":
+        import integrations.telegram as tg
+        poll.group_id = f"{config.TELEGRAM_GROUP_MARKETING}|{config.TELEGRAM_GROUP_RD}"
+        tg.send_to_marketing_group(text)
+        tg.send_to_rd_group(text)
     else:
         poll.group_id = f"{config.TEAMS_CHANNEL_MARKETING}|{config.TEAMS_CHANNEL_RD}"
         teams.send_to_marketing_channel(text)
@@ -51,7 +56,7 @@ def send_weekly_poll(platform: str = "whatsapp") -> Poll:
 
 def send_poll_reminder(poll_id: int, reminder_type: str) -> None:
     """Send 24h or 12h reminder to non-responders."""
-    poll = Poll.query.get(poll_id)
+    poll = db.session.get(Poll, poll_id)
     if not poll or poll.is_closed:
         return
 
@@ -84,14 +89,14 @@ def send_poll_reminder(poll_id: int, reminder_type: str) -> None:
 
 
 def close_poll_and_report(poll_id: int) -> None:
-    poll = Poll.query.get(poll_id)
+    poll = db.session.get(Poll, poll_id)
     if not poll:
         return
 
     responses = PollResponse.query.filter_by(poll_id=poll_id).all()
     summary_lines = []
     for r in responses:
-        member = TeamMember.query.get(r.member_id)
+        member = db.session.get(TeamMember, r.member_id)
         if member:
             summary_lines.append(f"- {member.name}: {r.response_text}")
 

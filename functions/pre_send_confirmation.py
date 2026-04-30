@@ -25,9 +25,8 @@ def request_rani_confirmation(message_type: str, description: str) -> RaniConfir
 def handle_rani_time_reply(confirmation_id: int, rani_reply: str, pending_message_id: int) -> None:
     """Called when Rani replies with a preferred time for sending a message."""
     from ai.message_generator import generate_rani_dm
-    import re
 
-    confirmation = RaniConfirmation.query.get(confirmation_id)
+    confirmation = db.session.get(RaniConfirmation, confirmation_id)
     if not confirmation:
         return
 
@@ -57,7 +56,7 @@ def handle_rani_time_reply(confirmation_id: int, rani_reply: str, pending_messag
     db.session.commit()
 
     if scheduled_time:
-        msg = OutgoingMessage.query.get(pending_message_id)
+        msg = db.session.get(OutgoingMessage, pending_message_id)
         if msg:
             msg.scheduled_at = scheduled_time
             msg.approved_by_rani_at = datetime.utcnow()

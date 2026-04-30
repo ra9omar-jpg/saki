@@ -19,7 +19,7 @@ def request_monday_status_send() -> None:
 
 def send_monday_status_request(platform: str = "whatsapp") -> None:
     """Send status request to R&D team with their tasks listed."""
-    planner.sync_tasks_to_db(config.PLANNER_PLAN_ID_RD, _get_app_context())
+    planner.sync_tasks_to_db(config.PLANNER_PLAN_ID_RD)
 
     rd_members = TeamMember.query.filter_by(team="rd", is_active=True).all()
     task_lines = []
@@ -40,6 +40,9 @@ def send_monday_status_request(platform: str = "whatsapp") -> None:
 
     if platform == "whatsapp":
         wa.send_to_rd_group(text)
+    elif platform == "telegram":
+        import integrations.telegram as tg
+        tg.send_to_rd_group(text)
     else:
         teams.send_to_rd_channel(text)
 
@@ -64,6 +67,9 @@ def send_tuesday_reminder(platform: str = "whatsapp") -> None:
 
     if platform == "whatsapp":
         wa.send_to_rd_group(text)
+    elif platform == "telegram":
+        import integrations.telegram as tg
+        tg.send_to_rd_group(text)
     else:
         teams.send_to_rd_channel(text)
 
@@ -94,10 +100,10 @@ def send_weekly_status_summary_to_rani(week_of: date = None) -> None:
     updates = StatusUpdate.query.filter_by(week_of=week_of).all()
     lines = []
     for u in updates:
-        member = TeamMember.query.get(u.member_id)
+        member = db.session.get(TeamMember, u.member_id)
         if not member:
             continue
-        task = Task.query.get(u.task_id) if u.task_id else None
+        task = db.session.get(Task, u.task_id) if u.task_id else None
         task_name = task.title[:40] if task else "ukendt opgave"
         lines.append(f"- {member.name} ({task_name}): {u.status_text}")
 
@@ -133,8 +139,3 @@ def _this_monday() -> date:
 
 def _record_status_request_sent() -> None:
     pass
-
-
-def _get_app_context():
-    from flask import current_app
-    return current_app._get_current_object().app_context()

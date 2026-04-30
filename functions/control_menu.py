@@ -51,7 +51,7 @@ def handle_quick_pause() -> None:
     state.is_paused = True
     state.paused_until = datetime.utcnow() + timedelta(hours=5)
     db.session.commit()
-    resume_time = (datetime.utcnow() + timedelta(hours=7)).strftime("%H:%M")
+    resume_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%H:%M")
     wa.send_to_rani(
         f"Forstået, {config.RANI_NAME}. Jeg er stille i 5 timer. Jeg vågner kl. {resume_time}. Saki"
     )

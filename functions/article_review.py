@@ -47,6 +47,9 @@ def send_weekly_review_request(platform: str = "whatsapp") -> None:
 
     if platform == "whatsapp":
         wa.send_to_expertise_group(text)
+    elif platform == "telegram":
+        import integrations.telegram as tg
+        tg.send_to_expertise_group(text)
     else:
         import integrations.teams as teams
         teams.send_to_expertise_channel(text)
@@ -69,7 +72,7 @@ def handle_article_claim(member_id: int, article_number: int) -> None:
         claimed_by_id=member_id, status="claimed"
     ).first()
     if has_pending:
-        member = TeamMember.query.get(member_id)
+        member = db.session.get(TeamMember, member_id)
         if member:
             text = generate_rani_dm(
                 f"Giv Rani besked om at {member.name} har prøvet at tage en ny artikel til review, men stadig har en afventende review der ikke er leveret."
@@ -88,7 +91,7 @@ def handle_article_claim(member_id: int, article_number: int) -> None:
 
 
 def _send_private_claim_confirmation(member_id: int, article: ArticleReview, deadline: datetime) -> None:
-    member = TeamMember.query.get(member_id)
+    member = db.session.get(TeamMember, member_id)
     if not member:
         return
     context = f"Send en privat besked til {member.name} om at bekræfte at de har taget artiklen '{article.title}' til review. Deadline er {deadline.strftime('%d/%m/%Y')}. Inkluder et link og en kort islamisk påmindelse om kvalitet og ansvar."
@@ -114,7 +117,7 @@ def send_deadline_reminders() -> None:
     ).all()
 
     for article in due_soon:
-        member = TeamMember.query.get(article.claimed_by_id)
+        member = db.session.get(TeamMember, article.claimed_by_id)
         if not member:
             continue
         context = f"Send {member.name} en venlig påmindelse om at deadline for review af artiklen '{article.title}' er om {config.ARTICLE_REMINDER_DAYS_BEFORE} dage."
@@ -134,7 +137,7 @@ def check_overdue_reviews() -> None:
 
     for article in overdue:
         article.status = "overdue"
-        member = TeamMember.query.get(article.claimed_by_id)
+        member = db.session.get(TeamMember, article.claimed_by_id)
         if member:
             text = generate_rani_dm(
                 f"Giv Rani besked om at {member.name} ikke leverede reviewet af '{article.title}' til deadline. Artiklen er nu markeret som forsinket."
@@ -175,6 +178,9 @@ def ping_unclaimed_articles(platform: str = "whatsapp") -> None:
 
     if platform == "whatsapp":
         wa.send_to_expertise_group(text)
+    elif platform == "telegram":
+        import integrations.telegram as tg
+        tg.send_to_expertise_group(text)
 
     for a in unclaimed:
         a.unclaimed_ping_count = 2

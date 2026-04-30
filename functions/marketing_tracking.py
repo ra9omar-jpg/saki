@@ -32,7 +32,7 @@ def record_opening_assignments(session_id: int, assignments: list[dict]) -> None
 
 
 def record_closing_deliveries(session_id: int, delivered_member_ids: list[int]) -> None:
-    session = WorkshopSession.query.get(session_id)
+    session = db.session.get(WorkshopSession, session_id)
     if not session:
         return
 
@@ -60,7 +60,7 @@ def _report_discrepancies_to_rani(session_id: int) -> None:
     else:
         lines = []
         for r in not_delivered:
-            member = TeamMember.query.get(r.member_id)
+            member = db.session.get(TeamMember, r.member_id)
             if not member:
                 continue
             lines.append(f"{member.name}: {r.task_description}")
@@ -100,7 +100,7 @@ def generate_weekly_pattern_report() -> None:
     for mid, stats in member_stats.items():
         if stats["total"] < 3:
             continue
-        member = TeamMember.query.get(mid)
+        member = db.session.get(TeamMember, mid)
         if not member:
             continue
         delivery_rate = stats["delivered"] / stats["total"]

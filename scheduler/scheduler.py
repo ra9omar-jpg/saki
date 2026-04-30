@@ -117,6 +117,13 @@ def start(app):
         id="planner_sync", replace_existing=True,
     )
 
+    # === CONFIRMED MESSAGE DISPATCHER: Every 5 minutes (BUG 6) ===
+    _scheduler.add_job(
+        func=lambda: _with_app(app, _dispatch_approved_confirmations),
+        trigger=CronTrigger(minute="*/5", timezone=TIMEZONE),
+        id="dispatch_approved_confirmations", replace_existing=True,
+    )
+
     _scheduler.start()
 
 
@@ -149,7 +156,7 @@ def _monday_status_request():
 
 def _tuesday_status_reminder():
     from functions.monday_status import send_tuesday_reminder
-    send_tuesday_reminder()
+    send_tuesday_reminder(platform=_active_platform())
 
 
 def _wednesday_flag():
@@ -182,7 +189,7 @@ def _poll_reminder_check():
 def _article_review_weekly():
     from functions.article_review import sync_articles_from_planner, send_weekly_review_request
     sync_articles_from_planner()
-    send_weekly_review_request()
+    send_weekly_review_request(platform=_active_platform())
 
 
 def _article_deadline_check():
@@ -194,7 +201,7 @@ def _article_deadline_check():
 
 def _article_unclaimed_ping():
     from functions.article_review import ping_unclaimed_articles
-    ping_unclaimed_articles()
+    ping_unclaimed_articles(platform=_active_platform())
 
 
 def _article_escalate():
@@ -233,3 +240,44 @@ def _planner_sync():
     from config import config
     sync_tasks_to_db(config.PLANNER_PLAN_ID_RD)
     sync_tasks_to_db(config.PLANNER_PLAN_ID_MARKETING)
+
+
+def _active_platform() -> str:
+    from config import config
+    if config.TELEGRAM_BOT_TOKEN and config.TELEGRAM_BOT_TOKEN not in ("pending", ""):
+        return "telegram"
+    return "whatsapp"
+
+
+def _dispatch_approved_confirmations():
+    from database.models import RaniConfirmation
+    from database.db import db
+    from datetime import datetime
+    now = datetime.utcnow()
+    pending = RaniConfirmation.query.filter(
+        RaniConfirmation.confirmed_at.isnot(None),
+        RaniConfirmation.is_sent == False,
+        RaniConfirmation.scheduled_time.isnot(None),
+        RaniConfirmation.scheduled_time <= now,
+    ).all()
+    for conf in pending:
+        try:
+            _execute_confirmation(conf.message_type)
+            conf.is_sent = True
+        except Exception as e:
+            logger.error("Dispatch fejlede for %s: %s", conf.message_type, e)
+    db.session.commit()
+
+
+def _execute_confirmation(message_type: str) -> None:
+    platform = _active_platform()
+    if message_type == "monday_status_rd":
+        from functions.monday_status import send_monday_status_request
+        send_monday_status_request(platform=platform)
+    elif message_type == "weekly_poll":
+        from functions.weekly_polls import send_weekly_poll
+        send_weekly_poll(platform=platform)
+    elif message_type == "weekly_review":
+        from functions.article_review import sync_articles_from_planner, send_weekly_review_request
+        sync_articles_from_planner()
+        send_weekly_review_request(platform=platform)

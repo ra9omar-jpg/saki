@@ -55,7 +55,7 @@ def check_unanswered_questions() -> None:
 
 
 def mark_question_answered(msg_id: int) -> None:
-    msg = IncomingMessage.query.get(msg_id)
+    msg = db.session.get(IncomingMessage, msg_id)
     if msg:
         msg.answered_at = datetime.utcnow()
         db.session.commit()

@@ -52,6 +52,9 @@ def _send_to_group_raw(group_id: str, body: str) -> str:
 
 
 def send_to_rani(body: str) -> str:
+    if not config.WHATSAPP_ACCESS_TOKEN or config.WHATSAPP_ACCESS_TOKEN in ("pending", ""):
+        import integrations.telegram as tg
+        return tg.send_to_rani(body)
     return send_message(config.RANI_WHATSAPP, body)
 
 

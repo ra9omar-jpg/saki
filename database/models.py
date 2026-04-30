@@ -207,7 +207,7 @@ class SakiState(db.Model):
 
 
 def get_saki_state() -> SakiState:
-    state = SakiState.query.get(1)
+    state = db.session.get(SakiState, 1)
     if not state:
         state = SakiState(id=1)
         db.session.add(state)

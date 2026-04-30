@@ -28,7 +28,7 @@ _SUMMARY_SYSTEM = (
 # ── Function 7: Structured workshop summary (from meeting data) ─────────────
 
 def draft_workshop_summary(session_id: int) -> str:
-    session = WorkshopSession.query.get(session_id)
+    session = db.session.get(WorkshopSession, session_id)
     if not session:
         raise ValueError(f"WorkshopSession {session_id} not found")
 
@@ -37,7 +37,7 @@ def draft_workshop_summary(session_id: int) -> str:
     not_delivered = [r for r in records if r.was_delivered is False]
 
     def member_name(r):
-        m = TeamMember.query.get(r.member_id)
+        m = db.session.get(TeamMember, r.member_id)
         return m.name if m else "Ukendt"
 
     data = {
@@ -56,7 +56,7 @@ def draft_workshop_summary(session_id: int) -> str:
 
 
 def send_summary_to_rani_for_approval(session_id: int) -> None:
-    session = WorkshopSession.query.get(session_id)
+    session = db.session.get(WorkshopSession, session_id)
     if not session or not session.summary_text:
         return
     text = generate_rani_dm(
@@ -67,7 +67,7 @@ def send_summary_to_rani_for_approval(session_id: int) -> None:
 
 
 def handle_rani_approval(session_id: int, platform: str = "whatsapp") -> None:
-    session = WorkshopSession.query.get(session_id)
+    session = db.session.get(WorkshopSession, session_id)
     if not session or not session.summary_text:
         return
 
@@ -127,7 +127,7 @@ def handle_rani_media(media_type: str, media_id: str, caption: str = "") -> None
         MediaWorkshopDraft.created_at.desc()
     ).first()
 
-    if draft and (datetime.utcnow() - draft.created_at).seconds < 3600:
+    if draft and (datetime.utcnow() - draft.created_at).total_seconds() < 3600:
         materials = json.loads(draft.raw_materials_json or "[]")
         materials.append(extracted_text)
         draft.raw_materials_json = json.dumps(materials)

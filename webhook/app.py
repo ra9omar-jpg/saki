@@ -77,7 +77,7 @@ def create_app() -> Flask:
     # ── Telegram: incoming messages ──────────────────────────────
     @app.route("/webhook/telegram/<secret>", methods=["POST"])
     def telegram_webhook(secret: str):
-        if secret != config.TELEGRAM_WEBHOOK_SECRET:
+        if not config.TELEGRAM_WEBHOOK_SECRET or secret != config.TELEGRAM_WEBHOOK_SECRET:
             abort(403)
         body = request.get_json(silent=True)
         if not body:

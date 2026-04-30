@@ -73,13 +73,12 @@ def get_assigned_tasks(plan_id: str, user_id: str) -> list[dict]:
     return [t for t in all_tasks if user_id in t.get("assignments", {})]
 
 
-def sync_tasks_to_db(plan_id: str, app_context) -> None:
+def sync_tasks_to_db(plan_id: str) -> None:
     from database.models import Task, TeamMember
     from database.db import db
     from datetime import datetime
 
-    with app_context():
-        tasks = get_tasks(plan_id)
+    tasks = get_tasks(plan_id)
         for t in tasks:
             existing = Task.query.filter_by(planner_id=t["id"]).first()
             assigned_to_id = None
