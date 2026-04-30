@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Sakeena AI Hub{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Pulsing active dot for Saki status — used on overview page */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.15); }
+    }
+    .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-56 shrink-0 flex flex-col" style="background:#1C2333">
+    <!-- Brand -->
+    <div class="px-6 py-5" style="border-bottom:1px solid rgba(255,255,255,0.08)">
+      <p class="text-xs font-medium tracking-widest uppercase" style="color:rgba(255,255,255,0.35)">Sakeena</p>
+      <h1 class="text-base font-bold text-white mt-0.5 leading-tight">AI Hub</h1>
+    </div>
+
+    <!-- Saki nav section -->
+    <div class="px-3 pt-4 pb-2">
+      <p class="px-3 mb-2 text-xs font-semibold tracking-widest uppercase" style="color:rgba(255,255,255,0.3)">Saki</p>
+      <nav class="space-y-0.5">
+        {% set nav_items = [
+          ('index',      url_for('dashboard.index'),      'Oversigt'),
+          ('control',    url_for('dashboard.control'),    'Kontrol'),
+          ('team',       url_for('dashboard.team'),       'Team'),
+          ('articles',   url_for('dashboard.articles'),   'Artikel-review'),
+          ('engagement', url_for('dashboard.engagement'), 'Engagement'),
+        ] %}
+        {% for key, href, label in nav_items %}
+        <a href="{{ href }}"
+           class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                  {% if active == key %}text-white{% else %}hover:text-white{% endif %}"
+           style="{% if active == key %}background:rgba(255,255,255,0.12); border-left:2px solid #059669;{% else %}color:rgba(255,255,255,0.55); border-left:2px solid transparent;{% endif %}">
+          {{ label }}
+        </a>
+        {% endfor %}
+      </nav>
+    </div>
+
+    <!-- Future agents placeholder -->
+    <div class="px-3 pt-4 pb-2" style="border-top:1px solid rgba(255,255,255,0.06); margin-top:auto">
+      <p class="px-3 mb-2 text-xs font-semibold tracking-widest uppercase" style="color:rgba(255,255,255,0.2)">Fremtid</p>
+      <span class="flex items-center px-3 py-2 text-sm rounded-md" style="color:rgba(255,255,255,0.2)">
+        + Tilføj agent
+      </span>
+    </div>
+
+    <!-- Logout -->
+    <div class="px-3 pb-5 pt-2">
+      <form method="POST" action="{{ url_for('dashboard.logout') }}">
+        <button type="submit"
+                class="w-full text-left flex items-center px-3 py-2 rounded-md text-sm transition-colors duration-150"
+                style="color:rgba(255,255,255,0.4)"
+                onmouseover="this.style.color='rgba(255,255,255,0.7)'"
+                onmouseout="this.style.color='rgba(255,255,255,0.4)'">
+          Log ud
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 overflow-auto p-8">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="mb-6 space-y-2">
+        {% for category, message in messages %}
+        <div class="flex items-start gap-3 px-4 py-3 rounded-lg text-sm font-medium
+          {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200
+          {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+</body>
+</html>
