@@ -1,0 +1,74 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Artikel-review — Sakeena AI Hub{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold text-gray-900 mb-6">Artikel-review</h2>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50">
+      <tr class="text-left text-gray-500 text-xs uppercase tracking-wide">
+        <th class="px-5 py-3 font-medium">Titel</th>
+        <th class="px-5 py-3 font-medium">Status</th>
+        <th class="px-5 py-3 font-medium">Reviewer</th>
+        <th class="px-5 py-3 font-medium">Deadline</th>
+        <th class="px-5 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for a in articles %}
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3">
+          {% if a.article_link %}
+            <a href="{{ a.article_link }}" target="_blank"
+               class="text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+              {{ a.title[:55] if a.title else '(uden titel)' }}
+            </a>
+          {% else %}
+            <span class="text-gray-800">{{ a.title[:55] if a.title else '(uden titel)' }}</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3">
+          {% if a.status == 'waiting' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">Venter</span>
+          {% elif a.status == 'claimed' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Taget</span>
+          {% elif a.status == 'overdue' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Forsinket</span>
+          {% elif a.status == 'completed' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">Færdig</span>
+          {% else %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">{{ a.status }}</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3 text-gray-500">
+          {% if a.claimed_by_id and members.get(a.claimed_by_id) %}
+            {{ members[a.claimed_by_id].name }}
+          {% else %}
+            <span class="text-gray-300">—</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3 text-gray-400 text-xs">
+          {% if a.deadline %}{{ a.deadline.strftime('%d/%m/%Y') }}{% else %}<span class="text-gray-300">—</span>{% endif %}
+        </td>
+        <td class="px-5 py-3 text-right">
+          {% if a.status in ('claimed', 'overdue') %}
+          <form method="POST" action="{{ url_for('dashboard.complete_article', article_id=a.id) }}">
+            <button type="submit"
+                    class="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition-colors">
+              Marker færdig
+            </button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not articles %}
+      <tr>
+        <td colspan="5" class="px-5 py-10 text-center text-gray-400 text-sm">Ingen artikler i køen.</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

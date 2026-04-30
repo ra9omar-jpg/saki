@@ -1,0 +1,101 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Team — Sakeena AI Hub{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold text-gray-900 mb-6">Team</h2>
+
+<!-- Add member -->
+<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-6">
+  <h3 class="text-sm font-semibold text-gray-700 mb-3">Tilføj nyt medlem</h3>
+  <form method="POST" action="{{ url_for('dashboard.add_member') }}" class="flex gap-3 flex-wrap items-end">
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Navn</label>
+      <input type="text" name="name" placeholder="Fulde navn" required
+             class="border border-gray-300 rounded-lg text-sm px-3 py-2
+                    focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-44">
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Team</label>
+      <select name="team"
+              class="border border-gray-300 rounded-lg text-sm px-2.5 py-2
+                     focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+        <option value="rd">R&amp;D</option>
+        <option value="marketing">Marketing</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Rolle</label>
+      <select name="role"
+              class="border border-gray-300 rounded-lg text-sm px-2.5 py-2
+                     focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+        <option value="member">Medlem</option>
+        <option value="lead">Lead</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Telegram ID (valgfrit)</label>
+      <input type="text" name="telegram_chat_id" placeholder="fx -100123456"
+             class="border border-gray-300 rounded-lg text-sm px-3 py-2
+                    focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-44">
+    </div>
+    <button type="submit"
+            class="px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors"
+            style="background:#1C2333"
+            onmouseover="this.style.background='#2d3a4f'"
+            onmouseout="this.style.background='#1C2333'">
+      Tilføj
+    </button>
+  </form>
+</div>
+
+<!-- Member table -->
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50">
+      <tr class="text-left text-gray-500 text-xs uppercase tracking-wide">
+        <th class="px-5 py-3 font-medium">Navn</th>
+        <th class="px-5 py-3 font-medium">Team</th>
+        <th class="px-5 py-3 font-medium">Rolle</th>
+        <th class="px-5 py-3 font-medium">Status denne uge</th>
+        <th class="px-5 py-3 font-medium">Telegram ID</th>
+        <th class="px-5 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for m in members %}
+      {% set eng = engagement.get(m.id) %}
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3 font-medium text-gray-900">{{ m.name }}</td>
+        <td class="px-5 py-3">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+            {% if m.team == 'rd' %}bg-blue-50 text-blue-700{% else %}bg-purple-50 text-purple-700{% endif %}">
+            {{ m.team }}
+          </span>
+        </td>
+        <td class="px-5 py-3 text-gray-500">{{ m.role }}</td>
+        <td class="px-5 py-3">
+          {% if eng and eng.status_update_responded %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700">Svaret</span>
+          {% else %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">Mangler</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3 text-gray-400 text-xs font-mono">{{ m.telegram_chat_id or '—' }}</td>
+        <td class="px-5 py-3 text-right">
+          <form method="POST" action="{{ url_for('dashboard.deactivate_member', member_id=m.id) }}"
+                onsubmit="return confirm('Deaktiver {{ m.name }}?')">
+            <button type="submit" class="text-xs text-red-400 hover:text-red-600 transition-colors">Deaktiver</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not members %}
+      <tr>
+        <td colspan="6" class="px-5 py-10 text-center text-gray-400 text-sm">Ingen aktive medlemmer.</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

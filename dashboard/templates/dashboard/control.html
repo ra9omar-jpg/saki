@@ -1,0 +1,128 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Kontrol — Sakeena AI Hub{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold text-gray-900 mb-6">Saki-kontrol</h2>
+
+<div class="grid grid-cols-2 gap-6 mb-6">
+
+  <!-- Mode -->
+  <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">Tilstand</h3>
+    <p class="text-xs text-gray-500 mb-3">Nuværende: <strong class="text-gray-800">{{ state.mode }}</strong></p>
+    <form method="POST" action="{{ url_for('dashboard.set_mode') }}" class="flex gap-2">
+      <select name="mode"
+              class="flex-1 border border-gray-300 rounded-lg text-sm px-2.5 py-2
+                     focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+        <option value="test" {% if state.mode == 'test' %}selected{% endif %}>Test</option>
+        <option value="shadow" {% if state.mode == 'shadow' %}selected{% endif %}>Shadow</option>
+        <option value="live" {% if state.mode == 'live' %}selected{% endif %}>Live</option>
+      </select>
+      <button type="submit"
+              class="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors"
+              style="background:#1C2333"
+              onmouseover="this.style.background='#2d3a4f'"
+              onmouseout="this.style.background='#1C2333'">
+        Skift
+      </button>
+    </form>
+  </div>
+
+  <!-- Pause / Wake up -->
+  <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">Pause</h3>
+    {% if state.is_paused or state.is_shutdown %}
+      <p class="text-xs text-gray-500 mb-3">
+        {% if state.is_shutdown %}Saki er lukket ned.
+        {% else %}På pause til {{ state.paused_until.strftime('%H:%M') if state.paused_until else '?' }}.
+        {% endif %}
+      </p>
+      <form method="POST" action="{{ url_for('dashboard.wake_up') }}">
+        <button type="submit"
+                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">
+          Vågn op
+        </button>
+      </form>
+    {% else %}
+      <p class="text-xs text-gray-500 mb-3">Saki er aktiv.</p>
+      <form method="POST" action="{{ url_for('dashboard.quick_pause') }}">
+        <button type="submit"
+                class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors">
+          Pause 5 timer
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Broadcast -->
+<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-6">
+  <h3 class="text-sm font-semibold text-gray-700 mb-3">Send broadcast</h3>
+  <form method="POST" action="{{ url_for('dashboard.broadcast') }}" class="space-y-3">
+    <select name="group"
+            class="border border-gray-300 rounded-lg text-sm px-2.5 py-2
+                   focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+      <option value="rd">R&amp;D</option>
+      <option value="marketing">Marketing</option>
+      <option value="ekspert">Ekspertise Review</option>
+      <option value="lærere">Lærere</option>
+      <option value="community">Community</option>
+    </select>
+    <textarea name="message" rows="3" placeholder="Skriv din besked..."
+              class="w-full border border-gray-300 rounded-lg text-sm px-3.5 py-2.5
+                     focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent
+                     resize-none transition-shadow duration-150"></textarea>
+    <button type="submit"
+            class="px-4 py-2.5 text-white text-sm font-semibold rounded-lg transition-colors"
+            style="background:#1C2333"
+            onmouseover="this.style.background='#2d3a4f'"
+            onmouseout="this.style.background='#1C2333'">
+      Send nu
+    </button>
+  </form>
+</div>
+
+<!-- Pending confirmations -->
+{% if pending_confirmations %}
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-sm font-semibold text-gray-700">Ventende godkendelser</h3>
+  </div>
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50">
+      <tr class="text-left text-gray-500 text-xs uppercase tracking-wide">
+        <th class="px-5 py-3 font-medium">Type</th>
+        <th class="px-5 py-3 font-medium">Beskrivelse</th>
+        <th class="px-5 py-3 font-medium">Anmodet</th>
+        <th class="px-5 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for conf in pending_confirmations %}
+      <tr>
+        <td class="px-5 py-3 text-gray-600 font-medium">{{ conf.message_type }}</td>
+        <td class="px-5 py-3 text-gray-500">
+          {{ conf.description[:60] if conf.description else '—' }}{% if conf.description and conf.description|length > 60 %}…{% endif %}
+        </td>
+        <td class="px-5 py-3 text-gray-400 text-xs">{{ conf.requested_at.strftime('%d/%m %H:%M') }}</td>
+        <td class="px-5 py-3 text-right">
+          <form method="POST" action="{{ url_for('dashboard.approve_confirmation', conf_id=conf.id) }}" class="inline">
+            <button type="submit"
+                    class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-md transition-colors">
+              Send nu
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+  <p class="text-sm text-gray-400">Ingen ventende godkendelser.</p>
+</div>
+{% endif %}
+
+{% endblock %}

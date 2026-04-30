@@ -1,0 +1,61 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Engagement — Sakeena AI Hub{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h2 class="text-2xl font-bold text-gray-900">Engagement</h2>
+  <span class="text-sm text-gray-400">Uge startende {{ week.strftime('%d/%m/%Y') }}</span>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50">
+      <tr class="text-left text-gray-500 text-xs uppercase tracking-wide">
+        <th class="px-5 py-3 font-medium">Navn</th>
+        <th class="px-5 py-3 font-medium">Team</th>
+        <th class="px-5 py-3 font-medium text-center">Status svaret</th>
+        <th class="px-5 py-3 font-medium text-center">Poll svaret</th>
+        <th class="px-5 py-3 font-medium text-center">Beskeder</th>
+        <th class="px-5 py-3 font-medium text-center">Artikler taget</th>
+        <th class="px-5 py-3 font-medium text-center">Artikler færdige</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for m in members %}
+      {% set r = records.get(m.id) %}
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3 font-medium text-gray-900">{{ m.name }}</td>
+        <td class="px-5 py-3">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+            {% if m.team == 'rd' %}bg-blue-50 text-blue-700{% else %}bg-purple-50 text-purple-700{% endif %}">
+            {{ m.team }}
+          </span>
+        </td>
+        <td class="px-5 py-3 text-center">
+          {% if r and r.status_update_responded %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700">Ja</span>
+          {% else %}
+            <span class="text-gray-300 text-xs">—</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3 text-center">
+          {% if r and r.poll_responded %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700">Ja</span>
+          {% else %}
+            <span class="text-gray-300 text-xs">—</span>
+          {% endif %}
+        </td>
+        <td class="px-5 py-3 text-center text-gray-600">{{ r.messages_sent_count if r else 0 }}</td>
+        <td class="px-5 py-3 text-center text-gray-600">{{ r.articles_claimed if r else 0 }}</td>
+        <td class="px-5 py-3 text-center text-gray-600">{{ r.articles_completed if r else 0 }}</td>
+      </tr>
+      {% endfor %}
+      {% if not members %}
+      <tr>
+        <td colspan="7" class="px-5 py-10 text-center text-gray-400 text-sm">Ingen aktive medlemmer.</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
